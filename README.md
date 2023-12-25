@@ -8,5 +8,4 @@ First of all, we need to train a custom object detection model to Detect Person,
 + Number of People have gone through security check
 + number of people that were not checked
 
-![alt text] [sec]
-[sec]:
+![Partition image](https://github.com/sidmangla/People_Counting/blob/main/sec.jpg)
