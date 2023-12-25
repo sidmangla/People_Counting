@@ -1,0 +1,17 @@
+{
+	"exit_point":400,
+	"entry_phase":[400,500],
+	"middle_order":[500,600],
+	"exit_phase":[600,700],
+	"entry_point":[700],
+	"trigger":"Person",
+	"confidence": 45,
+	"model_width": 608,
+	"model_height": 608,
+	"draw": 1,
+	"print_coord":0,
+	"orientation":"horizontal",
+	"input":"/home/sid/sec.avi",
+	"output":"/home/sid/out.avi"
+
+}
