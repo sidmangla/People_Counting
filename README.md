@@ -33,6 +33,10 @@ when we train the model we define the input model resolution. The resolution at 
   * Entry Point - 1070
   * Exit Point - 270
 
+Here is the Partition image
+
+![Partition image](https://github.com/sidmangla/People_Counting/blob/main/partition.jpg)
+
 We track the person from the first phase to the third phase moving in, when a person crosses the Entry Point the person has entered the facility. similarly, we track the person from the third phase to the first phase moving out, when a person crosses the exit point he has exited the place.
 
 ### Security Check
@@ -41,7 +45,14 @@ We also have security check functionality. The security check happens in the sec
 + **Diff_pixel** - One of the most important parameter as it differentiates between the same or different person. so when we detect a person on the scene we get its coordinate on the image. when we process the next frame. we find the absolute difference between the coordinates of the persons detected in the previous frame and the coordinates of the persons detected in the current frame. If this difference is above/ more the _**Diff_pixel**_ then it is a different person. otherwise, the same person has moved a bit in the next frame.
 + **sec_trig_xlimit** - The x-axis limit of the vicinity area.
 + **sec_trig_ylimit** - The y-axis limit of the vicinity area.
+
+From the Object detection model, we get the bounding box (its coordinates actually). We calculate the center point of the bounding box as a reference for that object. In the image below in _**Red**_ we show the center of the Person bounding box and in _**Blue**_ we have the midpoint of the Metal Detector bounding box. The _**Green**_ boxes are the vicinity area if have vicinity x-limit and y-limit value of 50. In that case, the metal detector will not be in the vicinity of the Person. As shown in the image the inner green rectangle does not include the Person midpoint. Therefore we need to keep in mind these things before setting the parameters for security check.
   
-   
-Here is the Partition image
-![Partition image](https://github.com/sidmangla/People_Counting/blob/main/sec.jpg)
+![Security check image](https://github.com/sidmangla/People_Counting/blob/main/sec.jpg)
+
+**Other Important parameters**
+
+* security_check - we have this parameter to opt out of the security functionality. Therefore this can be just used to count people entering and exiting a facility.
+* draw - Write the Stats on the image and  return it.
+* print_coord - For testing purposes when we need to define the parameters we can use this for testing multiple use cases and debugging
+
