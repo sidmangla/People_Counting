@@ -68,7 +68,8 @@ class SecurityCheck():
 			input_path = info["input"]
 			output = info["output"]
 			fps= info["fps"]
-			return input_path,fps,output
+		f.close()
+		return input_path,fps,output
 
 	def phase_check(self,ch):
 		if ch > self.first_phase[0] and ch < self.first_phase[1]:
@@ -219,7 +220,6 @@ if __name__ == '__main__':
 			out.write(img)
 		cap.release()
 		out.release()
-		f.close()
 	except Exception as e:
 		print (str(e))
 	cv2.destroyAllWindows()
