@@ -169,7 +169,6 @@ class SecurityCheck():
 								self.person_dict[key]["xm"] = xm
 								self.person_dict[key]["ym"] = ym
 								self.checked = 1
-								continue
 
 						if self.checked == 0 and (self.phase in self.phase_list):
 							self.p_num = self.p_num +1 
