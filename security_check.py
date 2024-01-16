@@ -14,6 +14,7 @@ class SecurityCheck():
 		self.diff_pixel = 50
 		self.small_diff = 20
 		self.exit_count = 0
+		self.checked = 0
 		self.entry_count = 0
 		self.del_item = 0
 		self.entry_point = 1520
@@ -68,8 +69,7 @@ class SecurityCheck():
 			input_path = info["input"]
 			output = info["output"]
 			fps= info["fps"]
-		f.close()
-		return input_path,fps,output
+			return input_path,fps,output
 
 	def phase_check(self,ch):
 		if ch > self.first_phase[0] and ch < self.first_phase[1]:
@@ -84,98 +84,103 @@ class SecurityCheck():
 			return "in"
 
 	def Security_entryGate(self,img,result):
-		dict_new = {}
-		self.del_list=[]
-		cord= j[2]
-		conf = j[1]
-		cl_name = j[0]
-		xm=int((cord[0]) * float(x_res/self.model_width)) 
-		ym=int((cord[1]) * float(y_res/self.model_height))
+		if result != []:
+			for i,j in enumerate(result):
+				self.checked =0
+				dict_new = {}
+				self.del_list=[]
+				cord= j[2]
+				conf = j[1]
+				cl_name = j[0]
+				xm=int((cord[0]) * float(x_res/self.model_width)) 
+				ym=int((cord[1]) * float(y_res/self.model_height))
 
-		if self.security_check == 1:
-			if cl_name == self.sec_trigger and float(conf) > self.sec_confidence and len(self.person_dict) >0:
-				for item in self.person_dict:
-					if self.person_dict[item]["moving"] == "in" and self.person_dict[item]["prev_phase"] == "second" and self.person_dict[item]["checked"] == 'no':
-						if abs(self.person_dict[item]["xco"] - xm) < self.sec_trig_xlimit and abs(self.person_dict[item]["yco"] - ym) < self.sec_trig_ylimit :
-							self.person_dict[item]["metal"] = self.person_dict[item]["metal"] + 1
-					if self.person_dict[item]["metal"] >= 2 and self.person_dict[item]["checked"] == "no":
-						self.checked_count = self.checked_count +1
-						self.person_dict[item]["checked"] = "yes"
+				if self.security_check == 1:
+					if cl_name == self.sec_trigger and float(conf) > self.sec_confidence and len(self.person_dict) >0:
+						for item in self.person_dict:
+							if self.person_dict[item]["moving"] == "in" and self.person_dict[item]["prev_phase"] == "second" and self.person_dict[item]["checked"] == 'no':
+								if abs(self.person_dict[item]["xco"] - xm) < self.sec_trig_xlimit and abs(self.person_dict[item]["yco"] - ym) < self.sec_trig_ylimit :
+									self.person_dict[item]["metal"] = self.person_dict[item]["metal"] + 1
+							if self.person_dict[item]["metal"] >= 2 and self.person_dict[item]["checked"] == "no":
+								self.checked_count = self.checked_count +1
+								self.person_dict[item]["checked"] = "yes"
 
 
 
 
-		if cl_name == self.trigger and float(conf) >= self.confidence:
-			if self.pr_coord == 1:
-				img = cv2.putText(img, "xm: "+str(xm)+"ym: "+str(ym) , (xm,ym), cv2.FONT_HERSHEY_SIMPLEX , 1,  (0, 0, 255) , 2, cv2.LINE_AA)
-			if self.orientation == "horizontal":
-				ch = xm
-			else:
-				ch = ym
-			if len(self.person_dict) == 0:
-				self.phase= self.phase_check(ch)
-				if self.phase == "first":
-					self.person_dict[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"in","checked":"no"}
-				elif self.phase == "third":
-					self.person_dict[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"out"}
-					
-			elif len(self.person_dict) > 0:
-				self.phase = self.phase_check(ch)
-				dict_new,dict_same = {}, {}
-				for key in self.person_dict:
+				if cl_name == self.trigger and float(conf) >= self.confidence:
+					if self.pr_coord == 1:
+						img = cv2.putText(img, "xm: "+str(xm)+"ym: "+str(ym) , (xm,ym), cv2.FONT_HERSHEY_SIMPLEX , 1,  (0, 0, 255) , 2, cv2.LINE_AA)
 					if self.orientation == "horizontal":
-						old_ch = int(self.person_dict[key]['xco'])
+						ch = xm
 					else:
-						old_ch = int(self.person_dict[key]['yco'])
-					dist = abs(ch - old_ch)
-					print ("Distance from previous frame: "+str(dist))
-					if dist < self.diff_pixel:
-
-						if self.phase == "out" and self.person_dict[key]["prev_phase"] == "first" and self.person_dict[key]["moving"] == "out":
-							self.exit_count = self.exit_count+1
-							self.person_dict[key]["prev_phase"] = "out"
-							self.del_list.append(key)
-
-						if self.phase == "second" and self.person_dict[key]["prev_phase"] == "third" and self.person_dict[key]["moving"] == "out":
-							self.person_dict[key]["moving"] = "out"
-							self.person_dict[key]["prev_phase"] = "second"
-
-						if self.phase == "first" and self.person_dict[key]["prev_phase"] == "second" and self.person_dict[key]["moving"] == "out":
-							self.person_dict[key]["moving"] = "out"
-							self.person_dict[key]["prev_phase"] = "first"
-
-
-						if self.phase == "second" and self.person_dict[key]["prev_phase"] == "first" and self.person_dict[key]["moving"] == "in":
-							self.person_dict[key]["moving"] = "in"
-							self.person_dict[key]["prev_phase"] = "second"
-
-						if self.phase == "third" and self.person_dict[key]["prev_phase"] == "second" and self.person_dict[key]["moving"] == "in":
-							self.person_dict[key]["moving"] = "in"
-							if self.security_check == 1:
-								if self.person_dict[key]["checked"] == "no" and (key not in self.not_checked):
-									print("**************************** Security Check not done **************************")
-									self.not_checked.append(key)
-
-							self.person_dict[key]["prev_phase"] = "third"
-
-						if self.phase == "in" and self.person_dict[key]["prev_phase"] == "third" and self.person_dict[key]["moving"] == "in":
-							self.entry_count = self.entry_count + 1
-							self.del_list.append(key)
-						
-						self.person_dict[key]["xm"] = xm
-						self.person_dict[key]["ym"] = ym
-
-					elif  dist > self.diff_pixel and (self.phase in self.phase_list):
-						self.p_num = self.p_num +1 
+						ch = ym
+					if len(self.person_dict) == 0:
+						self.phase= self.phase_check(ch)
 						if self.phase == "first":
-							dict_new[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"in","checked":"no"}
+							self.person_dict[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"in","checked":"no"}
 						elif self.phase == "third":
-					    	dict_new[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"out"}
-				if len(dict_new) > 0:
-					self.person_dict.update(dict_new)
-				if len(self.del_list) > 0 and len(self.person_dict) > 1:
-					for i in self.del_list:
-						self.person_dict.pop(i)
+							self.person_dict[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"out"}
+							
+							
+					elif len(self.person_dict) > 0:
+						self.phase = self.phase_check(ch)
+						dict_new,dict_same = {}, {}
+						for key in self.person_dict:
+							if self.orientation == "horizontal":
+								old_ch = int(self.person_dict[key]['xco'])
+							else:
+								old_ch = int(self.person_dict[key]['yco'])
+							dist = abs(ch - old_ch)
+							print ("Distance from previous frame: "+str(dist))
+							if dist < self.diff_pixel:
+
+								if self.phase == "out" and self.person_dict[key]["prev_phase"] == "first" and self.person_dict[key]["moving"] == "out":
+									self.exit_count = self.exit_count+1
+									self.person_dict[key]["prev_phase"] = "out"
+									self.del_list.append(key)
+
+								if self.phase == "second" and self.person_dict[key]["prev_phase"] == "third" and self.person_dict[key]["moving"] == "out":
+									self.person_dict[key]["moving"] = "out"
+									self.person_dict[key]["prev_phase"] = "second"
+
+								if self.phase == "first" and self.person_dict[key]["prev_phase"] == "second" and self.person_dict[key]["moving"] == "out":
+									self.person_dict[key]["moving"] = "out"
+									self.person_dict[key]["prev_phase"] = "first"
+
+
+								if self.phase == "second" and self.person_dict[key]["prev_phase"] == "first" and self.person_dict[key]["moving"] == "in":
+									self.person_dict[key]["moving"] = "in"
+									self.person_dict[key]["prev_phase"] = "second"
+
+								if self.phase == "third" and self.person_dict[key]["prev_phase"] == "second" and self.person_dict[key]["moving"] == "in":
+									self.person_dict[key]["moving"] = "in"
+									if self.security_check == 1:
+										if self.person_dict[key]["checked"] == "no" and (key not in self.not_checked):
+											print("**************************** Security Check not done **************************")
+											self.not_checked.append(key)
+
+									self.person_dict[key]["prev_phase"] = "third"
+
+								if self.phase == "in" and self.person_dict[key]["prev_phase"] == "third" and self.person_dict[key]["moving"] == "in":
+									self.entry_count = self.entry_count + 1
+									self.del_list.append(key)
+								
+								self.person_dict[key]["xm"] = xm
+								self.person_dict[key]["ym"] = ym
+								self.checked = 1
+								continue
+
+						if self.checked == 0 and (self.phase in self.phase_list):
+							self.p_num = self.p_num +1 
+								if self.phase == "first":
+									self.person_dict[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"in","checked":"no"}
+								elif self.phase == "third":
+							    	self.person_dict[self.p_num] = {"xco":xm,"yco":ym,"prev_phase":self.phase,"moving":"out"}
+
+						if len(self.del_list) > 0 and len(self.person_dict) > 1:
+							for i in self.del_list:
+								self.person_dict.pop(i)
 
 
 		if self.draw == 1:			
@@ -220,6 +225,7 @@ if __name__ == '__main__':
 			out.write(img)
 		cap.release()
 		out.release()
+		f.close()
 	except Exception as e:
 		print (str(e))
 	cv2.destroyAllWindows()
